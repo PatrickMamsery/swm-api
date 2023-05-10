@@ -6,7 +6,7 @@ use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Laravel\Sanctum\HasApiTokens;
+use Laravel\Passport\HasApiTokens;
 
 class User extends Authenticatable
 {
@@ -20,7 +20,11 @@ class User extends Authenticatable
     protected $fillable = [
         'name',
         'email',
+        'phone',
+        'role_id',
+        'image',
         'password',
+        'permissions',
     ];
 
     /**
@@ -31,6 +35,7 @@ class User extends Authenticatable
     protected $hidden = [
         'password',
         'remember_token',
+        'permissions',
     ];
 
     /**
@@ -39,6 +44,49 @@ class User extends Authenticatable
      * @var array
      */
     protected $casts = [
-        'email_verified_at' => 'datetime',
+        'permissions'          => 'array',
+        'email_verified_at'    => 'datetime',
     ];
+
+    /**
+     * The attributes for which you can use filters in url.
+     *
+     * @var array
+     */
+    protected $allowedFilters = [
+        'id',
+        'name',
+        'phone',
+        'email',
+        'permissions',
+    ];
+
+    /**
+     * The attributes for which can use sort in url.
+     *
+     * @var array
+     */
+    protected $allowedSorts = [
+        'id',
+        'name',
+        'phone',
+        'email',
+        'updated_at',
+        'created_at',
+    ];
+
+    public function customRole()
+    {
+        return $this->belongsTo(CustomRole::class, 'role_id', 'id');
+    }
+
+    public function customerDetail()
+    {
+        return $this->hasOne(CustomerDetail::class, 'id', 'customer_id');
+    }
+
+    public function contacts()
+    {
+        return $this->hasMany(CustomerContact::class, 'id', 'customer_id');
+    }
 }
