@@ -5,7 +5,10 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\API\PassportAuthController;
 use App\Http\Controllers\API\UserController;
 use App\Http\Controllers\API\MeterController;
+use App\Http\Controllers\API\PaymentController;
 use App\Http\Controllers\API\ForgotPasswordController;
+
+use App\Http\Middleware\WithoutLinks;
 
 /*
 |--------------------------------------------------------------------------
@@ -24,12 +27,18 @@ use App\Http\Controllers\API\ForgotPasswordController;
 
 Route::post('/register', [PassportAuthController::class, 'register']);
 Route::post('/login', [PassportAuthController::class, 'login'])->name('login.api');
-// Route::post('password-reset', [ForgotPasswordController::class, 'sendResetLinkResponse']);
+Route::post('password-reset', [ForgotPasswordController::class, 'sendResetLinkResponse']);
 
 Route::middleware('auth:api')->group(function() {
 
+    Route::apiResource('meters', MeterController::class)->middleware('withoutlink');
+
+    Route::get('/meter-readings/{meter?}', [MeterController::class, 'getMeterReadings'])->middleware('withoutlink');
+
+    Route::apiResource('payments', PaymentController::class)->middleware('withoutlink');
+
     Route::post('/logout', [PassportAuthController::class, 'logout']);
-    
+
     Route::get('/test', function() {
         return response()->json(['message' => 'Hello World!'], 200);
     });
