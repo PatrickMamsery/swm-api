@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 use App\Models\User;
+use App\Models\CustomRole;
 
 /**
  * @group User Authentication
@@ -42,6 +43,8 @@ class PassportAuthController extends Controller
             'name' => $request->name,
             'email' => $request->email,
             'phone' => $request->phone,
+            // 'image' => $request->image ? $request->image : null, // default image for all users
+            'role_id' => CustomRole::where('name', 'client')->first()->id, // defaults to client role
             'password' => bcrypt($request->password),
         ]);
 
