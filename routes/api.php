@@ -37,6 +37,9 @@ Route::middleware('auth:api')->group(function() {
 
     Route::apiResource('payments', PaymentController::class)->middleware('withoutlink');
 
+    // Password manipulation routes
+    Route::post('change-password', [UserController::class, 'changePassword']);
+
     Route::post('/logout', [PassportAuthController::class, 'logout']);
 
     Route::get('/test', function() {

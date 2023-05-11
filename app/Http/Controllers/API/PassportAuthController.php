@@ -82,7 +82,7 @@ class PassportAuthController extends Controller
                         'name' => Auth::user()->name,
                         'email' => Auth::user()->email,
                         'phone' => Auth::user()->phone,
-                        'image' => Auth::user()->image,
+                        // 'image' => Auth::user()->image,
                         'role' => Auth::user()->customRole->name,
                     ]
                 ], 200
