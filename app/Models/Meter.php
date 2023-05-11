@@ -21,4 +21,9 @@ class Meter extends Model
     {
         return $this->belongsTo(User::class, 'customer_id', 'id');
     }
+
+    public function readings()
+    {
+        return $this->hasMany(MeterReading::class);
+    }
 }

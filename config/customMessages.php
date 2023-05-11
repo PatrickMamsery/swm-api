@@ -4,6 +4,8 @@ return [
     'RETRIEVE_SUCCESS' => 'Resource retrieved successfully',
     'RETRIEVE_FAILED' => 'Failed to retrieve resource',
 
+    'RETRIEVE_AUTHORIZATION_ERROR' => 'You are not authorized to view this resource',
+
     'RETRIEVE_MANY_SUCCESS' => 'Resources retrieved successfully',
     'RETRIEVE_MANY_FAILED' => 'Failed to retrieve resources',
 
