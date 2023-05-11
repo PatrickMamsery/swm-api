@@ -78,6 +78,7 @@ class PassportAuthController extends Controller
                 [
                     'token' => $token,
                     'userData' => [
+                        'id' => Auth::user()->id,
                         'name' => Auth::user()->name,
                         'email' => Auth::user()->email,
                         'phone' => Auth::user()->phone,
