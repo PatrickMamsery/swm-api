@@ -23,9 +23,14 @@ class MeterController extends BaseController
     {
         // Get all meters for the authenticated user
         $customer = Auth::user();
-        $meters = Meter::where('customer_id', $customer->id)->paginate();
-        // Return a collection of $meters with pagination
-        return $this->sendResponse(MeterResource::collection($meters), 'RETRIEVE_SUCCESS');
+        $meters = Meter::where('customer_id', $customer->id)->get();
+
+        if (count($meters) == 0) {
+            return $this->sendError('NOT_FOUND', 404);
+        } else {
+            // Return a collection of $meters with pagination
+            return $this->sendResponse(MeterResource::collection($meters), 'RETRIEVE_SUCCESS');
+        }
     }
 
     /**

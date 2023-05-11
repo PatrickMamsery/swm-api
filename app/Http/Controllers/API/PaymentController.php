@@ -23,10 +23,16 @@ class PaymentController extends BaseController
         // Get all payments for the authenticated user
         $customer = Auth::user();
         $customerPaymentIds = CustomerPayment::where('customer_id', $customer->id)->pluck('payment_id')->toArray();
-        $payments = Payment::whereIn('id', $customerPaymentIds)->paginate();
+        $payments = Payment::whereIn('id', $customerPaymentIds)->get();
+
         // var_dump($payments); die;
-        // Return a collection of $payments with pagination
-        return $this->sendResponse(PaymentResource::collection($payments), 'RETRIEVE_SUCCESS');
+
+        if (count($payments) == 0) {
+            return $this->sendError('NOT_FOUND', 404);
+        } else {
+            // Return a collection of $payments with pagination
+            return $this->sendResponse(PaymentResource::collection($payments->paginate()), 'RETRIEVE_SUCCESS');
+        }
     }
 
     /**
