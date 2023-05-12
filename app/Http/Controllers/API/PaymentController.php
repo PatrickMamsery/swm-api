@@ -86,7 +86,16 @@ class PaymentController extends BaseController
         $units = $request->amount / config('constants.UNIT_PRICE'); // 1 unit = 1000 TSH
 
         // get and update the customer's units
-        $currentUnits = $meter->readings->last()->total_volume / config('constants.UNIT_PRICE');
+        // add failsafe to check if there's past readings on the meter
+        $currentUnits = 0;
+        
+        if ($meter->readings->count() == 0) {
+            $currentUnits = 0;
+        } else {
+            $currentUnits = $meter->readings->last()->total_volume / config('constants.UNIT_PRICE');
+        }
+
+        // $currentUnits = $meter->readings->last()->total_volume / config('constants.UNIT_PRICE');
         $newUnits = $currentUnits + $units;
         $newVolume = $newUnits * config('constants.UNIT_PRICE');
 
