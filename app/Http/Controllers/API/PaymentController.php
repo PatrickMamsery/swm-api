@@ -28,15 +28,15 @@ class PaymentController extends BaseController
         // Get all payments for the authenticated user
         $customer = Auth::user();
         $customerPaymentIds = CustomerPayment::where('customer_id', $customer->id)->pluck('payment_id')->toArray();
-        $payments = Payment::whereIn('id', $customerPaymentIds)->get();
+        $payments = Payment::whereIn('id', $customerPaymentIds);
 
-        // var_dump($payments); die;
+        // var_dump(count($payments->get())); die;
 
-        if (count($payments) == 0) {
+        if (count($payments->get()) == 0) {
             return $this->sendError('NOT_FOUND', 404);
         } else {
             // Return a collection of $payments with pagination
-            return $this->sendResponse(PaymentResource::collection($payments->paginate()), 'RETRIEVE_SUCCESS');
+            return $this->sendResponse(PaymentResource::collection($payments->latest('updated_at')->paginate()), 'RETRIEVE_SUCCESS');
         }
     }
 
@@ -88,7 +88,7 @@ class PaymentController extends BaseController
         // get and update the customer's units
         // add failsafe to check if there's past readings on the meter
         $currentUnits = 0;
-        
+
         if ($meter->readings->count() == 0) {
             $currentUnits = 0;
         } else {
