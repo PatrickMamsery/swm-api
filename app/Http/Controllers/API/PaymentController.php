@@ -55,7 +55,7 @@ class PaymentController extends BaseController
         $validator = Validator::make($request->all(), [
             'amount' => 'required|numeric',
             'meter_id' => 'required|numeric|exists:meters,id', // TODO: validate the meter number
-            'payment_date' => 'required|date',
+            // 'payment_date' => 'required|date',
             'payment_method' => 'required|string',
             'reference_number' => 'nullable|string',
         ]);
