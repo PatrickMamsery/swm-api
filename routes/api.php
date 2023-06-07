@@ -29,6 +29,9 @@ Route::post('/register', [PassportAuthController::class, 'register']);
 Route::post('/login', [PassportAuthController::class, 'login'])->name('login.api');
 Route::post('password-reset', [ForgotPasswordController::class, 'sendResetLinkResponse']);
 
+// populate meter readings
+Route::post('/meter-reading', [MeterController::class, 'storeMeterReadings']);
+
 Route::middleware('auth:api')->group(function() {
 
     Route::apiResource('meters', MeterController::class)->middleware('withoutlink');
