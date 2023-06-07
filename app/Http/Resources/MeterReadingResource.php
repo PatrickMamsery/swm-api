@@ -17,6 +17,7 @@ class MeterReadingResource extends JsonResource
         return [
             'id' => $this->id,
             'meter_id' => $this->meter_id,
+            'meter_number' => $this->meter->meter_number,
             'customer' => $this->meter->customer->name,
             'flow_rate' => $this->flow_rate,
             'total_volume' => $this->total_volume,

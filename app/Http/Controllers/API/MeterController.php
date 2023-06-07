@@ -119,12 +119,13 @@ class MeterController extends BaseController
         // validate the request
         $validator = Validator::make($request->all(), [
             'flow_rate' => 'required',
-            'total_volume' => 'required',
+            'units' => 'required',
             'timestamp' => 'required',
             'meter_reading_status' => 'nullable',
             'meter_reading_image' => 'nullable',
             'meter_reading_comment' => 'nullable',
-            'meter_id' => 'required|exists:meters,id'
+            'meter_number' => 'required'
+            // 'meter_id' => 'required|exists:meters,id'
         ]);
 
         if ($validator->fails()) {
@@ -132,10 +133,10 @@ class MeterController extends BaseController
         }
 
         // validate if meter exists
-        if (!Meter::find($request->meter_id)) {
+        if (!Meter::where('meter_number', $request->meter_number)->first()) {
             return $this->sendError('NOT_FOUND', 404);
         } else {
-            $meter = Meter::find($request->meter_id);
+            $meter = Meter::where('meter_number', $request->meter_number)->first();
             // Get meters for the authenticated user
             // $meters = Meter::where('customer_id', Auth::user()->id)->pluck('id')->toArray();
             $meters = Meter::all()->pluck('id')->toArray();
@@ -145,10 +146,14 @@ class MeterController extends BaseController
                 return $this->sendError('NOT_FOUND', 404);
             } else {
 
+                // convert given units to actual volume
+                $units = $request->input('units');
+                $total_volume = $units * config('constants.UNIT_CONVERSION_FACTOR');
+
                 $meterReading = new MeterReading();
                 $meterReading->meter_id = $meter->id;
                 $meterReading->flow_rate = $request->input('flow_rate');
-                $meterReading->total_volume = $request->input('total_volume');
+                $meterReading->total_volume = $total_volume;
                 $meterReading->meter_reading_date = $request->input('timestamp');
                 $meterReading->meter_reading_status = $request->input('meter_reading_status') ?? 'normal';
                 $meterReading->save();
