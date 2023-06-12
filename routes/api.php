@@ -29,6 +29,10 @@ Route::post('/register', [PassportAuthController::class, 'register']);
 Route::post('/login', [PassportAuthController::class, 'login'])->name('login.api');
 Route::post('password-reset', [ForgotPasswordController::class, 'sendResetLinkResponse']);
 
+Route::get('api-test', function() {
+    return response()->json(['message' => 'Up and okay!'], 200);
+});
+
 // populate meter readings
 Route::post('/meter-reading', [MeterController::class, 'storeMeterReadings']);
 
