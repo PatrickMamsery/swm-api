@@ -159,7 +159,8 @@ class MeterController extends BaseController
                 $meterReading->save();
 
                 // Return a single meter reading
-                return $this->sendResponse(new MeterReadingResource($meterReading), 'RETRIEVE_SUCCESS');
+                // return $this->sendResponse(new MeterReadingResource($meterReading), 'RETRIEVE_SUCCESS');
+                return response(['status' => 'success']);
             }
         }
     }
