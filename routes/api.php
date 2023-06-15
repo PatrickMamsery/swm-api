@@ -36,6 +36,11 @@ Route::get('api-test', function() {
 // populate meter readings
 Route::post('/meter-reading', [MeterController::class, 'storeMeterReadings']);
 
+Route::get('/webhook/meter-readings/{meterNumber?}', [MeterController::class, 'getUpdatedMeterReading']);
+
+// Example route for receiving meter updates
+// Route::post('/webhook/meter/update', [MeterController::class, 'updateMeter']);
+
 Route::middleware('auth:api')->group(function() {
 
     Route::apiResource('meters', MeterController::class)->middleware('withoutlink');

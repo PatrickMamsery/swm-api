@@ -34,4 +34,7 @@ return [
     'ROLE_NOT_ALLOWED' => 'Role not allowed',
     'MISSING_ADDITIONAL_INFO' => 'Additional info for role missing',
     'ADDITIONAL_INFO_ROLE_MISMATCH' => 'Provided additional info is invalid for the role specified',
+
+    // payment errors
+    'PAYMENT_UPDATE_NOTIFICATION_ERROR' => 'Payment update sending failed',
 ];

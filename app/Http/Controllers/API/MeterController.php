@@ -186,4 +186,40 @@ class MeterController extends BaseController
     {
         //
     }
+
+    // update meter
+    public function updateMeter(Request $request)
+    {
+        // Process the meter update and perform necessary actions
+        $response = [
+            'meter_id' => $request->input('meter_id'),
+            'units' => $request->input('units'),
+            'volume' => $request->input('volume'),
+        ];
+        // Return a response indicating the update was handled successfully
+        return response()->json([
+            'data' => $response,
+            'success' => true
+        ]);
+    }
+
+    public function getUpdatedMeterReading(Request $request, $meterNumber)
+    {
+        $meter = Meter::where('meter_number', $meterNumber)->first();
+
+        // var_dump($meter); die;
+
+        if (!$meter) {
+            return $this->sendError('NOT_FOUND', 404);
+        } else {
+            $meterReading = MeterReading::where('meter_id', $meter->id)->latest()->first();
+
+            $data = [
+                'units' => ($meterReading->total_volume) / config('constants.UNIT_CONVERSION_FACTOR'),
+                'flow_rate' => $meterReading->flow_rate
+            ];
+
+            return response($data, 200);
+        }
+    }
 }

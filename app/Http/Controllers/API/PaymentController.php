@@ -8,6 +8,7 @@ use App\Models\Meter;
 use App\Models\MeterReading;
 use App\Models\Payment;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Log;
@@ -92,12 +93,12 @@ class PaymentController extends BaseController
         if ($meter->readings->count() == 0) {
             $currentUnits = 0;
         } else {
-            $currentUnits = $meter->readings->last()->total_volume / config('constants.UNIT_PRICE');
+            $currentUnits = $meter->readings->last()->total_volume / config('constants.UNIT_CONVERSION_FACTOR');
         }
 
         // $currentUnits = $meter->readings->last()->total_volume / config('constants.UNIT_PRICE');
         $newUnits = $currentUnits + $units;
-        $newVolume = $newUnits * config('constants.UNIT_PRICE');
+        $newVolume = $newUnits * config('constants.UNIT_CONVERSION_FACTOR');
 
         // var_dump($newUnits); die;
 
@@ -121,6 +122,23 @@ class PaymentController extends BaseController
             'units' => $newUnits,
             'volume' => $newVolume,
         ];
+
+        // prepare data for sending to meter
+        // $data = [];
+        // $data['meter_id'] = $meter->id;
+        // $data['units'] = $newUnits;
+        // $data['volume'] = $newVolume;
+
+        $data = [
+            'meter_id' => $meter->id,
+            'units' => $newUnits,
+            'volume' => $newVolume,
+        ];
+
+        // var_dump($data); die;
+
+        // call the method
+        // $this->sendPaymentUpdate($data);
 
         return $this->sendResponse(new PaymentSummaryResource($paymentSummary), 'CREATE_SUCCESS');
     }
@@ -176,5 +194,13 @@ class PaymentController extends BaseController
     public function destroy(Payment $payment)
     {
         //
+    }
+
+    // miscellaneous functions
+
+    // send response to meter about the payment
+    public function sendPaymentUpdate($data)
+    {
+        Http::post('http://localhost:8000/api/webhook/meter/update', $data);
     }
 }
