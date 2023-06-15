@@ -62,7 +62,7 @@ class PaymentController extends BaseController
         ]);
 
         if ($validator->fails) {
-            return $this->sendError($validator->errors(), 408);
+            return response(['errors' => $validator->errors()->all()], 422);
         }
 
         // validate meter entry
