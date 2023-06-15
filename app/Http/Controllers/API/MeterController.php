@@ -215,12 +215,8 @@ class MeterController extends BaseController
             $meterReading = MeterReading::where('meter_id', $meter->id)->latest()->first();
 
             $data = [
-                'data' => [
-                    'units' => ($meterReading->total_volume) / config('constants.UNIT_CONVERSION_FACTOR'),
-                    'flow_rate' => $meterReading->flow_rate
-                ],
-                'message' => 'Successful retrieve latest meter reading',
-                'status' => "success"
+                'units' => ($meterReading->total_volume) / config('constants.UNIT_CONVERSION_FACTOR'),
+                'flow_rate' => $meterReading->flow_rate
             ];
 
             return response($data, 200);
