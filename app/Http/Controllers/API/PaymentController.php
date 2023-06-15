@@ -61,12 +61,16 @@ class PaymentController extends BaseController
             'reference_number' => 'nullable|string',
         ]);
 
+        if ($validator->fails) {
+            return $this->sendError($validator->errors(), 408);
+        }
+
         // validate meter entry
         $meter = Meter::where('id', $request->meter_id)->where('customer_id', $customer->id)->first();
 
 
         if (!$meter) {
-            return $this->sendError('RETRIEVE_ERROR', 428);
+            return $this->sendError('NOT_FOUND', 428);
         }
 
         // create a new payment
