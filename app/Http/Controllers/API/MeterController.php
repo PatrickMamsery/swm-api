@@ -220,7 +220,7 @@ class MeterController extends BaseController
                     'flow_rate' => $meterReading->flow_rate
                 ],
                 'message' => 'Successful retrieve latest meter reading',
-                'status' => 200
+                'status' => "success"
             ];
 
             return response($data, 200);
