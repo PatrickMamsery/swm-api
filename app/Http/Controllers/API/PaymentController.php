@@ -61,7 +61,9 @@ class PaymentController extends BaseController
             'reference_number' => 'nullable|string',
         ]);
 
-        if ($validator->fails) {
+
+
+        if ($validator->fails()) {
             return response(['errors' => $validator->errors()->all()], 422);
         }
 
