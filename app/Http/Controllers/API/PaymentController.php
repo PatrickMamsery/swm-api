@@ -111,7 +111,7 @@ class PaymentController extends BaseController
         // update the meter's units
         $meterReading = new MeterReading;
         $meterReading->meter_id = $meter->id;
-        $meterReading->flow_rate = 15; // TODO:: get the flow rate from the meter GSM module
+        $meterReading->flow_rate = $meter->readings->last()->flow_rate; // TODO:: get the flow rate from the meter GSM module
         $meterReading->total_volume = $newVolume;
         $meterReading->meter_reading_date = now();
         $meterReading->meter_reading_status = 'normal';
