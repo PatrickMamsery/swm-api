@@ -99,7 +99,12 @@ class PaymentController extends BaseController
         if ($meter->readings->count() == 0) {
             $currentUnits = 0;
         } else {
-            $currentUnits = $meter->readings->last()->total_volume / config('constants.UNIT_CONVERSION_FACTOR');
+            // fail safe for new meters
+            if (is_null($meter->readings->last())){
+                $currentUnits = 0;
+            } else {
+                $currentUnits = $meter->readings->last()->total_volume / config('constants.UNIT_CONVERSION_FACTOR');
+            }
         }
 
         // $currentUnits = $meter->readings->last()->total_volume / config('constants.UNIT_PRICE');
@@ -111,7 +116,7 @@ class PaymentController extends BaseController
         // update the meter's units
         $meterReading = new MeterReading;
         $meterReading->meter_id = $meter->id;
-        $meterReading->flow_rate = $meter->readings->last()->flow_rate; // TODO:: get the flow rate from the meter GSM module
+        $meterReading->flow_rate = !is_null($meter->readings->last()) ? $meter->readings->last()->flow_rate : 0; // TODO:: get the flow rate from the meter GSM module
         $meterReading->total_volume = $newVolume;
         $meterReading->meter_reading_date = now();
         $meterReading->meter_reading_status = 'normal';

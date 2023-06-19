@@ -60,6 +60,13 @@ class MeterController extends BaseController
         $meter->customer_id = auth()->user()->id;
         $meter->save();
 
+        // fail safe: after creating a new meter create a new meter reading with default values
+        $meterReading = new MeterReading();
+        $meterReading->meter_id = $meter->id;
+        $meterReading->flow_rate = 0;
+        $meterReading->total_volume = 0;
+        $meterReading->meter_reading_date = now();
+
         // Return a single meter
         return $this->sendResponse(new MeterResource($meter), 'CREATE_SUCCESS');
     }
@@ -214,6 +221,8 @@ class MeterController extends BaseController
             return $this->sendError('NOT_FOUND', 404);
         } else {
             $meterReading = MeterReading::where('meter_id', $meter->id)->latest()->first();
+
+            // var_dump($meterReading); die;
 
             $data = [
                 'units' => ($meterReading->total_volume) / config('constants.UNIT_CONVERSION_FACTOR'),
