@@ -8,7 +8,7 @@ use App\Models\Meter;
 use App\Models\MeterReading;
 use App\Models\Payment;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Http;
+// use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Log;
@@ -68,90 +68,90 @@ class PaymentController extends BaseController
         }
 
         // validate meter entry
-        $meter = Meter::where('id', $request->meter_id)->where('customer_id', $customer->id)->first();
+        try {
+            $meter = Meter::where('id', $request->meter_id)->where('customer_id', $customer->id)->first();
 
+            if (!$meter) {
+                return $this->sendError('NOT_FOUND', 428);
+            }
 
-        if (!$meter) {
-            return $this->sendError('NOT_FOUND', 428);
-        }
+            // create a new payment
+            $payment = new Payment;
+            $payment->title = 'Payment for meter ' . $meter->meter_number;
+            $payment->amount = $request->amount;
+            $payment->payment_method = $request->payment_method ? $request->payment_method : 'CASH';
+            $payment->reference_number = $request->reference_number ? $request->reference_number : Str::upper(referenceNumber());
+            $payment->save();
 
-        // create a new payment
-        $payment = new Payment;
-        $payment->title = 'Payment for meter ' . $meter->meter_number;
-        $payment->amount = $request->amount;
-        $payment->payment_method = $request->payment_method ? $request->payment_method : 'CASH';
-        $payment->reference_number = $request->reference_number ? $request->reference_number : Str::upper(referenceNumber());
-        $payment->save();
+            // create a new customer_payment
+            $customerPayment = new CustomerPayment;
+            $customerPayment->customer_id = $customer->id;
+            $customerPayment->payment_id = $payment->id;
+            $customerPayment->save();
 
-        // create a new customer_payment
-        $customerPayment = new CustomerPayment;
-        $customerPayment->customer_id = $customer->id;
-        $customerPayment->payment_id = $payment->id;
-        $customerPayment->save();
+            addLog("transaction", "[". $customer->email ."] made a payment of TSH ". $request->amount ." for meter ". $meter->meter_number, "application");
 
-        // calculate the corresponding units for the payment
-        $units = $request->amount / config('constants.UNIT_PRICE'); // 1 unit = 1000 TSH
+            // calculate the corresponding units for the payment
+            $units = $request->amount / config('constants.UNIT_PRICE'); // 1 unit = 1000 TSH
 
-        // get and update the customer's units
-        // add failsafe to check if there's past readings on the meter
-        $currentUnits = 0;
-
-        if ($meter->readings->count() == 0) {
+            // get and update the customer's units
+            // add failsafe to check if there's past readings on the meter
             $currentUnits = 0;
-        } else {
-            // fail safe for new meters
-            if (is_null($meter->readings->last())){
+
+            if ($meter->readings->count() == 0) {
                 $currentUnits = 0;
             } else {
-                $currentUnits = $meter->readings->last()->total_volume / config('constants.UNIT_CONVERSION_FACTOR');
+                // fail safe for new meters
+                if (is_null($meter->readings->last())){
+                    $currentUnits = 0;
+                } else {
+                    $currentUnits = $meter->readings->last()->total_volume / config('constants.UNIT_CONVERSION_FACTOR');
+                }
             }
+
+            // $currentUnits = $meter->readings->last()->total_volume / config('constants.UNIT_PRICE');
+            $newUnits = $currentUnits + $units;
+            $newVolume = $newUnits * config('constants.UNIT_CONVERSION_FACTOR');
+
+            // var_dump($newUnits); die;
+
+            // update the meter's units
+            $meterReading = new MeterReading;
+            $meterReading->meter_id = $meter->id;
+            $meterReading->flow_rate = !is_null($meter->readings->last()) ? $meter->readings->last()->flow_rate : 0; // TODO:: get the flow rate from the meter GSM module
+            $meterReading->total_volume = $newVolume;
+            $meterReading->meter_reading_date = now();
+            $meterReading->meter_reading_status = 'normal';
+            $meterReading->save();
+            // var_dump($meterReading); die;
+
+            // return the payment in new resource
+            $paymentSummary = [
+                'payment_id' => $payment->id,
+                'meter_id' => $meter->id,
+                'amount' => $payment->amount,
+                'payment_method' => $payment->payment_method,
+                'reference_number' => $payment->reference_number,
+                'units' => $newUnits,
+                'volume' => $newVolume,
+            ];
+
+            // $data = [
+            //     'meter_id' => $meter->id,
+            //     'units' => $newUnits,
+            //     'volume' => $newVolume,
+            // ];
+
+            // var_dump($data); die;
+
+            // call the method
+            // $this->sendPaymentUpdate($data);
+
+            return $this->sendResponse(new PaymentSummaryResource($paymentSummary), 'CREATE_SUCCESS');
+        } catch (\Throwable $th) {
+            Log::error($th->getMessage());
+            return $this->sendError('CREATE_ERROR', $th->getMessage());
         }
-
-        // $currentUnits = $meter->readings->last()->total_volume / config('constants.UNIT_PRICE');
-        $newUnits = $currentUnits + $units;
-        $newVolume = $newUnits * config('constants.UNIT_CONVERSION_FACTOR');
-
-        // var_dump($newUnits); die;
-
-        // update the meter's units
-        $meterReading = new MeterReading;
-        $meterReading->meter_id = $meter->id;
-        $meterReading->flow_rate = !is_null($meter->readings->last()) ? $meter->readings->last()->flow_rate : 0; // TODO:: get the flow rate from the meter GSM module
-        $meterReading->total_volume = $newVolume;
-        $meterReading->meter_reading_date = now();
-        $meterReading->meter_reading_status = 'normal';
-        $meterReading->save();
-        // var_dump($meterReading); die;
-
-        // return the payment in new resource
-        $paymentSummary = [
-            'payment_id' => $payment->id,
-            'meter_id' => $meter->id,
-            'amount' => $payment->amount,
-            'payment_method' => $payment->payment_method,
-            'reference_number' => $payment->reference_number,
-            'units' => $newUnits,
-            'volume' => $newVolume,
-        ];
-
-        // prepare data for sending to meter
-        // $data = [];
-        // $data['meter_id'] = $meter->id;
-        // $data['units'] = $newUnits;
-        // $data['volume'] = $newVolume;
-
-        $data = [
-            'meter_id' => $meter->id,
-            'units' => $newUnits,
-            'volume' => $newVolume,
-        ];
-
-        // var_dump($data); die;
-
-        // call the method
-        // $this->sendPaymentUpdate($data);
-
-        return $this->sendResponse(new PaymentSummaryResource($paymentSummary), 'CREATE_SUCCESS');
     }
 
     /**
@@ -175,7 +175,7 @@ class PaymentController extends BaseController
 
             // if not in the array of payments, return error
             if (!in_array($payment->id, $payments)) {
-                return $this->sendError('RETRIEVE_ERROR', 'You are not authorized to view this payment.');
+                return $this->sendError('RETRIEVE_AUTHORIZATION_ERROR', 'You are not authorized to view this payment.');
             }
 
             // Return a single payment
@@ -183,6 +183,25 @@ class PaymentController extends BaseController
         }
 
     }
+
+    // get the payments according to meter
+    // public function getPaymentsByMeter($meterId)
+    // {
+    //     // get the meter
+    //     $meter = Meter::find($meterId);
+
+    //     // if not found, return error
+    //     if (!$meter) {
+    //         return $this->sendError('NOT_FOUND', 404);
+    //     } else {
+    //         // check if the meter belongs to the authenticated user
+    //         if ($meter->customer_id != Auth::user()->id) {
+    //             return $this->sendError('RETRIEVE_AUTHORIZATION_ERROR', 'You are not authorized to view this meter.');
+    //         }
+    //     }
+
+    // }
+
 
     /**
      * Update the specified resource in storage.
@@ -210,8 +229,8 @@ class PaymentController extends BaseController
     // miscellaneous functions
 
     // send response to meter about the payment
-    public function sendPaymentUpdate($data)
-    {
-        Http::post('http://localhost:8000/api/webhook/meter/update', $data);
-    }
+    // public function sendPaymentUpdate($data)
+    // {
+    //     Http::post('http://localhost:8000/api/webhook/meter/update', $data);
+    // }
 }

@@ -5,6 +5,8 @@ return [
     'RETRIEVE_FAILED' => 'Failed to retrieve resource',
 
     'RETRIEVE_AUTHORIZATION_ERROR' => 'You are not authorized to view this resource',
+    'UPDATE_AUTHORIZATION_ERROR' => 'You are not authorized to update this resource',
+    'DELETE_AUTHORIZATION_ERROR' => 'You are not authorized to delete this resource',
 
     'RETRIEVE_MANY_SUCCESS' => 'Resources retrieved successfully',
     'RETRIEVE_MANY_FAILED' => 'Failed to retrieve resources',

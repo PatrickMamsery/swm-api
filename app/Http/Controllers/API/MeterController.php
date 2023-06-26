@@ -42,7 +42,7 @@ class MeterController extends BaseController
      */
     public function store(Request $request)
     {
-        Log::info('MeterController@store');
+        // Log::info('MeterController@store');
         // Validate the request
         $request->validate([
             'meter_number' => 'required',
@@ -51,24 +51,29 @@ class MeterController extends BaseController
             'customer_id' => 'required'
         ]);
 
-        // Create a meter
-        $meter = new Meter();
-        $meter->meter_number = $request->input('meter_number');
-        $meter->meter_type = $request->input('meter_type');
-        $meter->meter_location = $request->input('meter_location');
-        $meter->meter_status = 'active'; // default to 'active
-        $meter->customer_id = auth()->user()->id;
-        $meter->save();
+        try {
+            // Create a meter
+            $meter = new Meter();
+            $meter->meter_number = $request->input('meter_number');
+            $meter->meter_type = $request->input('meter_type');
+            $meter->meter_location = $request->input('meter_location');
+            $meter->meter_status = 'active'; // default to 'active
+            $meter->customer_id = auth()->user()->id;
+            $meter->save();
 
-        // fail safe: after creating a new meter create a new meter reading with default values
-        $meterReading = new MeterReading();
-        $meterReading->meter_id = $meter->id;
-        $meterReading->flow_rate = 0;
-        $meterReading->total_volume = 0;
-        $meterReading->meter_reading_date = now();
+            // fail safe: after creating a new meter create a new meter reading with default values
+            $meterReading = new MeterReading();
+            $meterReading->meter_id = $meter->id;
+            $meterReading->flow_rate = 0;
+            $meterReading->total_volume = 0;
+            $meterReading->meter_reading_date = now();
 
         // Return a single meter
         return $this->sendResponse(new MeterResource($meter), 'CREATE_SUCCESS');
+        } catch (\Throwable $th) {
+            Log::error($th);
+            return $this->sendError('CREATE_FAILED', $th->getMessage());
+        }
     }
 
     /**
@@ -140,35 +145,40 @@ class MeterController extends BaseController
         }
 
         // validate if meter exists
-        if (!Meter::where('meter_number', $request->meter_number)->first()) {
-            return $this->sendError('NOT_FOUND', 404);
-        } else {
-            $meter = Meter::where('meter_number', $request->meter_number)->first();
-            // Get meters for the authenticated user
-            // $meters = Meter::where('customer_id', Auth::user()->id)->pluck('id')->toArray();
-            $meters = Meter::all()->pluck('id')->toArray();
-
-            // if the meter is not owned by the authenticated user, return error
-            if (!in_array($meter->id, $meters)) {
+        try {
+            if (!Meter::where('meter_number', $request->meter_number)->first()) {
                 return $this->sendError('NOT_FOUND', 404);
             } else {
+                $meter = Meter::where('meter_number', $request->meter_number)->first();
+                // Get meters for the authenticated user
+                // $meters = Meter::where('customer_id', Auth::user()->id)->pluck('id')->toArray();
+                $meters = Meter::all()->pluck('id')->toArray();
 
-                // convert given units to actual volume
-                $units = $request->input('units');
-                $total_volume = $units * config('constants.UNIT_CONVERSION_FACTOR');
+                // if the meter is not owned by the authenticated user, return error
+                if (!in_array($meter->id, $meters)) {
+                    return $this->sendError('NOT_FOUND', 404);
+                } else {
 
-                $meterReading = new MeterReading();
-                $meterReading->meter_id = $meter->id;
-                $meterReading->flow_rate = $request->input('flow_rate');
-                $meterReading->total_volume = $total_volume;
-                $meterReading->meter_reading_date = $request->input('timestamp');
-                $meterReading->meter_reading_status = $request->input('meter_reading_status') ?? 'normal';
-                $meterReading->save();
+                    // convert given units to actual volume
+                    $units = $request->input('units');
+                    $total_volume = $units * config('constants.UNIT_CONVERSION_FACTOR');
 
-                // Return a single meter reading
-                // return $this->sendResponse(new MeterReadingResource($meterReading), 'RETRIEVE_SUCCESS');
-                return response(['status' => 'success']);
+                    $meterReading = new MeterReading();
+                    $meterReading->meter_id = $meter->id;
+                    $meterReading->flow_rate = $request->input('flow_rate');
+                    $meterReading->total_volume = $total_volume;
+                    $meterReading->meter_reading_date = $request->input('timestamp');
+                    $meterReading->meter_reading_status = $request->input('meter_reading_status') ?? 'normal';
+                    $meterReading->save();
+
+                    // Return a single meter reading
+                    // return $this->sendResponse(new MeterReadingResource($meterReading), 'RETRIEVE_SUCCESS');
+                    return response(['status' => 'success']);
+                }
             }
+        } catch (\Throwable $th) {
+            Log::error($th);
+            return response(['status' => 'failed', 'message' => $th->getMessage()], 500);
         }
     }
 
@@ -213,23 +223,28 @@ class MeterController extends BaseController
 
     public function getUpdatedMeterReading(Request $request, $meterNumber)
     {
-        $meter = Meter::where('meter_number', $meterNumber)->first();
+        try {
+            $meter = Meter::where('meter_number', $meterNumber)->first();
 
-        // var_dump($meter); die;
+            // var_dump($meter); die;
 
-        if (!$meter) {
-            return $this->sendError('NOT_FOUND', 404);
-        } else {
-            $meterReading = MeterReading::where('meter_id', $meter->id)->latest()->first();
+            if (!$meter) {
+                return $this->sendError('NOT_FOUND', 404);
+            } else {
+                $meterReading = MeterReading::where('meter_id', $meter->id)->latest()->first();
 
-            // var_dump($meterReading); die;
+                // var_dump($meterReading); die;
 
-            $data = [
-                'units' => ($meterReading->total_volume) / config('constants.UNIT_CONVERSION_FACTOR'),
-                'flow_rate' => $meterReading->flow_rate
-            ];
+                $data = [
+                    'units' => ($meterReading->total_volume) / config('constants.UNIT_CONVERSION_FACTOR'),
+                    'flow_rate' => $meterReading->flow_rate
+                ];
 
-            return response($data, 200);
+                return response($data, 200);
+            }
+        } catch (\Throwable $th) {
+            Log::error($th);
+            return response(['status' => 'failed', 'message' => $th->getMessage()], 500);
         }
     }
 }

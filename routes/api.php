@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\API\PassportAuthController;
 use App\Http\Controllers\API\UserController;
 use App\Http\Controllers\API\MeterController;
+use App\Http\Controllers\API\QueryController;
 use App\Http\Controllers\API\PaymentController;
 use App\Http\Controllers\API\ForgotPasswordController;
 
@@ -38,16 +39,20 @@ Route::post('/meter-reading', [MeterController::class, 'storeMeterReadings']);
 
 Route::get('/webhook/meter-readings/{meterNumber?}', [MeterController::class, 'getUpdatedMeterReading']);
 
-// Example route for receiving meter updates
-// Route::post('/webhook/meter/update', [MeterController::class, 'updateMeter']);
 
 Route::middleware('auth:api')->group(function() {
 
-    Route::apiResource('meters', MeterController::class)->middleware('withoutlink');
+    Route::group(['middleware' => 'withoutlink'], function() {
+        Route::apiResource('meters', MeterController::class)->except(['update', 'destroy']);
 
-    Route::get('/meter-readings/{meter?}', [MeterController::class, 'getMeterReadings'])->middleware('withoutlink');
+        Route::get('/meter-readings/{meter?}', [MeterController::class, 'getMeterReadings']);
 
-    Route::apiResource('payments', PaymentController::class)->middleware('withoutlink');
+        Route::apiResource('payments', PaymentController::class)->except(['update', 'destroy']);
+
+        // Route::get('/payments/{payment?}', [PaymentController::class, 'getPaymentsByMeter']);
+
+        Route::apiResource('queries', QueryController::class);
+    });
 
     // Password manipulation routes
     Route::post('change-password', [UserController::class, 'changePassword']);
