@@ -78,7 +78,7 @@ class PaymentController extends BaseController
             // create a new payment
             $payment = new Payment;
             $payment->title = 'Payment for meter ' . $meter->meter_number;
-            $payment->amount = $request->amount;
+            $payment->amount = (floatval($request->amount));
             $payment->payment_method = $request->payment_method ? $request->payment_method : 'CASH';
             $payment->reference_number = $request->reference_number ? $request->reference_number : Str::upper(referenceNumber());
             $payment->save();
