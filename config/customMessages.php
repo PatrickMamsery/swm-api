@@ -39,4 +39,7 @@ return [
 
     // payment errors
     'PAYMENT_UPDATE_NOTIFICATION_ERROR' => 'Payment update sending failed',
+
+    // miscellaneous
+    'SERVER_ERRROR' => 'Server error',
 ];

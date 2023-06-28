@@ -12,6 +12,9 @@ use Illuminate\Support\Facades\Validator;
 
 use App\Http\Resources\MeterResource;
 use App\Http\Resources\MeterReadingResource;
+use App\Http\Resources\MeterTrendsResource;
+
+use Carbon\Carbon;
 
 class MeterController extends BaseController
 {
@@ -245,6 +248,56 @@ class MeterController extends BaseController
         } catch (\Throwable $th) {
             Log::error($th);
             return response(['status' => 'failed', 'message' => $th->getMessage()], 500);
+        }
+    }
+
+    // get meter trends
+    public function getMeterTrends(){
+        try {
+            // Program execution
+            // 1. Get all meters for the authenticated user
+            // 2. Get all meter readings for each meter
+            // 3. Group meter readings by
+            //      a. Date
+            //      b. Meter
+            // 4. Get the sum of the total volume for each meter, for each date and convert to units
+            // 5. Return the data, grouped by date and categorized by meter
+
+            // Get meters for the authenticated user
+            $meters = Meter::where('customer_id', Auth::user()->id)->pluck('id')->toArray();
+
+            // Get meter readings for each meter
+            $meterReadings = MeterReading::whereIn('meter_id', $meters)->get();
+
+            // Group meter readings by date and meter
+            $meterReadings = $meterReadings->groupBy(function ($item, $key) {
+                return [
+                    'date' => $item->meter_reading_date->format('Y-m-d')
+                ];
+            })->map(function ($item, $key) {
+                return $item->groupBy('meter_id');
+            });
+
+            // Get the sum of the total volume for each meter, for each date and convert to units, display the meter ids too
+            $meterReadings = $meterReadings->map(function ($item, $key) {
+                return $item->map(function ($item, $key) {
+                    return [
+                        'meter_id' => $key,
+                        'units' => $item->sum('total_volume') / config('constants.UNIT_CONVERSION_FACTOR')
+                    ];
+                });
+            });
+
+            // var_dump($meterReadings); die;
+
+
+            // Return the data, grouped by date and categorized by meter
+            return $this->sendResponse(new MeterTrendsResource($meterReadings), 'RETRIEVE_SUCCESS');
+
+
+        } catch (\Throwable $th) {
+            Log::error($th);
+            return $this->sendError('SERVER_ERROR', $th->getMessage(), 500);
         }
     }
 }
