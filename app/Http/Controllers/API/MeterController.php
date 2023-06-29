@@ -269,6 +269,21 @@ class MeterController extends BaseController
             // Get meter readings for each meter
             $meterReadings = MeterReading::whereIn('meter_id', $meters)->get();
 
+            // changed manipulation, getting values on a weekly basis
+            // $startDate = Carbon::now()->subDays(7);
+            // $endDate = Carbon::now();
+            // $dates = [];
+
+
+            // while ($startDate <= $endDate) {
+            //     $formattedDate = $startDate->format('D, d M');
+            //     $dates[] = $formattedDate;
+
+            //     $startDate->addDay();
+            // }
+
+            // var_dump($data); die;
+
             // Group meter readings by date and meter
             $meterReadings = $meterReadings->groupBy(function ($item, $key) {
                 return [
@@ -277,6 +292,8 @@ class MeterController extends BaseController
             })->map(function ($item, $key) {
                 return $item->groupBy('meter_id');
             });
+
+            // var_dump($meterReadings); die;
 
             // Get the sum of the total volume for each meter, for each date and convert to units, display the meter ids too
             $meterReadings = $meterReadings->map(function ($item, $key) {
@@ -288,7 +305,12 @@ class MeterController extends BaseController
                 });
             });
 
-            // var_dump($meterReadings); die;
+            // $data = [
+            //     'dates' => $dates,
+            //     'meters' => $meterReadings
+            // ];
+
+            // var_dump($data); die;
 
 
             // Return the data, grouped by date and categorized by meter
