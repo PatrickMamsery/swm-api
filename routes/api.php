@@ -47,7 +47,9 @@ Route::middleware('auth:api')->group(function() {
 
         Route::get('/meter-readings/{meter?}', [MeterController::class, 'getMeterReadings']);
 
-        Route::get('/meter-trends', [MeterController::class, 'getMeterTrends']);
+        // Route::get('/meter-trends', [MeterController::class, 'getMeterTrends']);
+
+        Route::get('/meter-trends', [MeterController::class, 'getMeterTrendsV2']);
 
         Route::apiResource('payments', PaymentController::class)->except(['update', 'destroy']);
 

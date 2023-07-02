@@ -322,4 +322,54 @@ class MeterController extends BaseController
             return $this->sendError('SERVER_ERROR', $th->getMessage(), 500);
         }
     }
+
+    public function getMeterTrendsV2()
+    {
+        try {
+            // get all meters for the authenticated user
+            $meters = Meter::where('customer_id', Auth::user()->id)->pluck('id')->toArray();
+
+            // Get meter readings for each meter
+            $meterReadings = MeterReading::whereIn('meter_id', $meters)->get();
+
+            $meterReadings = $meterReadings->groupBy(function ($item, $key) {
+                return [
+                    'date' => $item->meter_reading_date->format('Y-m-d')
+                ];
+            })->map(function ($item, $key) {
+                return $item->groupBy('meter_id');
+            });
+
+            var_dump($meterReadings); die;
+
+            $meterReadings = $meterReadings->map(function ($item, $key) {
+                return $item->map(function ($item, $key) {
+                    return [
+                        'meter_id' => $key,
+                        'units' => $item->sum('total_volume') / config('constants.UNIT_CONVERSION_FACTOR')
+                    ];
+                });
+            });
+
+            var_dump($meterReadings); die;
+
+            // get values on a weekly basis
+            $startDate = Carbon::now()->subDays(7);
+            $endDate = Carbon::now();
+            $dates = [];
+
+            while ($startDate <= $endDate) {
+                $formattedDate = $startDate->format('D, d M');
+                $dates[] = $formattedDate;
+
+                $startDate->addDay();
+            }
+
+            var_dump("worse"); die;
+
+        } catch (\Throwable $th) {
+            Log::error($th);
+            return $this->sendError('SERVER_ERROR', $th->getMessage(), 500);
+        }
+    }
 }

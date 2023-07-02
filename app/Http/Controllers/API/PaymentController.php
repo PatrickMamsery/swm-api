@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
+use App\Models\Bill;
 use App\Models\CustomerPayment;
 use App\Models\Meter;
 use App\Models\MeterReading;
@@ -74,6 +75,23 @@ class PaymentController extends BaseController
             if (!$meter) {
                 return $this->sendError('NOT_FOUND', 428);
             }
+
+            // payment amount should be greater than zero
+            if ($request->amount <= 0) {
+                return $this->sendError('INVALID_AMOUNT', 422);
+            }
+
+            // check payment method if cash make a bill
+            if ($request->payment_method == 'CASH') {
+                $bill = new Bill;
+                $bill->title = 'Payment for meter ' . $meter->meter_number;
+                $bill->amount = (floatval($request->amount));
+                $bill->reference_number = $request->reference_number ? $request->reference_number : Str::upper(referenceNumber());
+                $bill->status = 'unpaid'; // We'll mark it as paid when the payment is made
+                $bill->save();
+
+                addLog("transaction", "[". $customer->email ."] requested a bill of TSH ". $request->amount ." for meter ". $meter->meter_number . " to be paid in CASH", "application");
+            } 
 
             // create a new payment
             $payment = new Payment;

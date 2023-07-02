@@ -39,6 +39,7 @@ return [
 
     // payment errors
     'PAYMENT_UPDATE_NOTIFICATION_ERROR' => 'Payment update sending failed',
+    'INVALID_AMOUNT' => 'Invalid amount',
 
     // miscellaneous
     'SERVER_ERRROR' => 'Server error',
