@@ -53,6 +53,8 @@ Route::middleware('auth:api')->group(function() {
 
         Route::apiResource('payments', PaymentController::class)->except(['update', 'destroy']);
 
+        Route::apiResource('bills', BillController::class)->except(['store', 'update', 'destroy']);
+
         // Route::get('/payments/{payment?}', [PaymentController::class, 'getPaymentsByMeter']);
 
         Route::apiResource('queries', QueryController::class);

@@ -84,14 +84,15 @@ class PaymentController extends BaseController
             // check payment method if cash make a bill
             if ($request->payment_method == 'CASH') {
                 $bill = new Bill;
-                $bill->title = 'Payment for meter ' . $meter->meter_number;
+                $bill->title = 'Bill for meter ' . $meter->meter_number;
+                $bill->customer_id = $customer->id;
                 $bill->amount = (floatval($request->amount));
                 $bill->reference_number = $request->reference_number ? $request->reference_number : Str::upper(referenceNumber());
                 $bill->status = 'unpaid'; // We'll mark it as paid when the payment is made
                 $bill->save();
 
                 addLog("transaction", "[". $customer->email ."] requested a bill of TSH ". $request->amount ." for meter ". $meter->meter_number . " to be paid in CASH", "application");
-            } 
+            }
 
             // create a new payment
             $payment = new Payment;
