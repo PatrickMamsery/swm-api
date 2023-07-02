@@ -8,6 +8,7 @@ use App\Http\Controllers\API\MeterController;
 use App\Http\Controllers\API\QueryController;
 use App\Http\Controllers\API\PaymentController;
 use App\Http\Controllers\API\ForgotPasswordController;
+use App\Http\Controllers\API\BillController;
 
 use App\Http\Middleware\WithoutLinks;
 
