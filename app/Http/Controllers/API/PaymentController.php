@@ -142,6 +142,8 @@ class PaymentController extends BaseController
             $meterReading->meter_reading_date = now();
             $meterReading->meter_reading_status = 'normal';
             $meterReading->save();
+
+            addLog("transaction", "[". $customer->email ."] updated meter ". $meter->meter_number ." with new units of ". $newUnits, "application");
             // var_dump($meterReading); die;
 
             // return the payment in new resource
