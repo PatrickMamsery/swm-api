@@ -135,7 +135,7 @@ class MeterController extends BaseController
         $validator = Validator::make($request->all(), [
             'flow_rate' => 'required',
             'units' => 'required',
-            'timestamp' => 'required',
+            'timestamp' => 'nullable',
             'meter_reading_status' => 'nullable',
             'meter_reading_image' => 'nullable',
             'meter_reading_comment' => 'nullable',
@@ -166,11 +166,17 @@ class MeterController extends BaseController
                     $units = $request->input('units');
                     $total_volume = $units * config('constants.UNIT_CONVERSION_FACTOR');
 
+                    // convert the given flow_rate to 2 decimal places number
+                    $flow_rate = round(floatval($request->flow_rate), 2);
+
+                    // convert the input timestamp to the actual system time of the backend
+                    $timestamp = Carbon::now();
+
                     $meterReading = new MeterReading();
                     $meterReading->meter_id = $meter->id;
-                    $meterReading->flow_rate = $request->input('flow_rate');
+                    $meterReading->flow_rate = $flow_rate;
                     $meterReading->total_volume = $total_volume;
-                    $meterReading->meter_reading_date = $request->input('timestamp');
+                    $meterReading->meter_reading_date = $timestamp;
                     $meterReading->meter_reading_status = $request->input('meter_reading_status') ?? 'normal';
                     $meterReading->save();
 
