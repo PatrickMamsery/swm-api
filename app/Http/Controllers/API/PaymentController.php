@@ -143,13 +143,13 @@ class PaymentController extends BaseController
             // var_dump($newUnits); die;
 
             // update the meter's units
-            $meterReading = new MeterReading;
-            $meterReading->meter_id = $meter->id;
-            $meterReading->flow_rate = !is_null($meter->readings->last()) ? $meter->readings->last()->flow_rate : 0; // TODO:: get the flow rate from the meter GSM module
-            $meterReading->total_volume = $newVolume;
-            $meterReading->meter_reading_date = now();
-            $meterReading->meter_reading_status = 'normal';
-            $meterReading->save();
+            // $meterReading = new MeterReading;
+            // $meterReading->meter_id = $meter->id;
+            // $meterReading->flow_rate = !is_null($meter->readings->last()) ? $meter->readings->last()->flow_rate : 0; // TODO:: get the flow rate from the meter GSM module
+            // $meterReading->total_volume = $newVolume;
+            // $meterReading->meter_reading_date = now();
+            // $meterReading->meter_reading_status = 'normal';
+            // $meterReading->save();
 
             addLog("transaction", "[". $customer->email ."] updated meter ". $meter->meter_number ." with new units of ". $newUnits, "application");
             // var_dump($meterReading); die;
