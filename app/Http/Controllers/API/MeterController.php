@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Meter;
 use App\Models\MeterReading;
+use App\Models\PurchasedUnit;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
@@ -164,7 +165,7 @@ class MeterController extends BaseController
 
                     // convert given units to actual volume
                     $units = $request->input('units');
-                    $total_volume = $units * config('constants.UNIT_CONVERSION_FACTOR');
+                    // $total_volume = $units * config('constants.UNIT_CONVERSION_FACTOR');
 
                     // convert the given flow_rate to 2 decimal places number
                     $flow_rate = round(floatval($request->flow_rate), 2);
@@ -172,13 +173,35 @@ class MeterController extends BaseController
                     // convert the input timestamp to the actual system time of the backend
                     $timestamp = Carbon::now();
 
+                    // failsafe
+                    // use meter number to read into the purchased units where the status is true
+                    $purchasedUnitsEntries = PurchasedUnit::where('meter_id', $meter->id)->where('status', 1)->get();
+
+                    // var_dump($purchasedUnitsEntries); die;
+
+                    // sum the units from the list
+                    $sum = 0;
+                    foreach ($purchasedUnitsEntries as $entry) {
+                        $sum += $entry->units;
+                    }
+
+                    $currentUnits = $units + $sum;
+
+                    $newVolume = $currentUnits * config('constants.UNIT_CONVERSION_FACTOR');
+
                     $meterReading = new MeterReading();
                     $meterReading->meter_id = $meter->id;
                     $meterReading->flow_rate = $flow_rate;
-                    $meterReading->total_volume = $total_volume;
+                    $meterReading->total_volume = $newVolume;
                     $meterReading->meter_reading_date = $timestamp;
                     $meterReading->meter_reading_status = $request->input('meter_reading_status') ?? 'normal';
                     $meterReading->save();
+
+                    // update the purchased units table
+                    foreach($purchasedUnitsEntries as $entry) {
+                        $entry->status = 0;
+                        $entry->save();
+                    }
 
                     // Return a single meter reading
                     // return $this->sendResponse(new MeterReadingResource($meterReading), 'RETRIEVE_SUCCESS');

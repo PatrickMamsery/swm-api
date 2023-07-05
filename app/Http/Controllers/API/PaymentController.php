@@ -8,6 +8,7 @@ use App\Models\CustomerPayment;
 use App\Models\Meter;
 use App\Models\MeterReading;
 use App\Models\Payment;
+use App\Models\PurchasedUnit;
 use Illuminate\Http\Request;
 // use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Auth;
@@ -112,6 +113,13 @@ class PaymentController extends BaseController
 
             // calculate the corresponding units for the payment
             $units = $request->amount / config('constants.UNIT_PRICE'); // 1 unit = 1000 TSH
+
+            // get and update the customer's units
+            $purchaseUnits = new PurchasedUnit;
+            $purchaseUnits->meter_id = $meter->id;
+            $purchaseUnits->units = $units;
+            $purchaseUnits->status = 1;
+            $purchaseUnits->save();
 
             // get and update the customer's units
             // add failsafe to check if there's past readings on the meter
