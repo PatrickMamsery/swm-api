@@ -85,8 +85,10 @@ The endpoints are defined in the `api.php` file found by the following procedure
 
 To locate the `api.php` file, you can use the following command in your terminal:
 
+```
 $ cd path/to/your/project/routes
 $ open api.php
+```
 
 
 
